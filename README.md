@@ -1,3 +1,5 @@
+# Video 1.
+
  Debug Symbols is used to provide specification:
  -----------------------------------------------
  -----------------------------------------------
@@ -26,6 +28,7 @@ Eg: Description of user
 
 - **_✓ NOTE: More specific in presence of debug symbols._**
 
+# Video 2.
 ```
 1. We need to explicitly mention it at compile time.
 
@@ -481,4 +484,292 @@ Local exec file:
 2. the core dump files that the debugger is currently using
 3. the files from which the debugger loaded symbols
 
+# Video 3. - Inspecting Symbols with NM
 
+### NM --> Lists Symbols from Object Files
+```
+$ nm ./main2_debug                                         ----------+
+0000000000001165 T AddNum                                            |
+                 U atoi@GLIBC_2.2.5                                  |
+0000000000004048 B __bss_start                                       |
+0000000000004048 b completed.0                                       | 
+                 w __cxa_finalize@GLIBC_2.2.5                        | 
+0000000000004038 D __data_start                                      | 
+0000000000004038 W data_start                                        |
+00000000000010b0 t deregister_tm_clones                              |
+0000000000001120 t __do_global_dtors_aux                             |
+0000000000003df0 d __do_global_dtors_aux_fini_array_entry            |
+0000000000004040 D __dso_handle                                      |
+0000000000003df8 d _DYNAMIC                                          |
+0000000000004048 D _edata                                            |
+0000000000004050 B _end                                              | 
+00000000000012c4 T _fini                                             | 
+0000000000001160 t frame_dummy                                       |
+0000000000003de8 d __frame_dummy_init_array_entry                    |
+00000000000021e4 r __FRAME_END__                                     |
+                 U getchar@GLIBC_2.2.5                               | 
+0000000000004000 d _GLOBAL_OFFSET_TABLE_                             |---- Symbol Name
+                 w __gmon_start__                                    | 
+0000000000002050 r __GNU_EH_FRAME_HDR                                |
+000000000000404c B IamGlobalVariable                                 |
+0000000000001000 t _init                                             | 
+0000000000003df0 d __init_array_end                                  |
+0000000000003de8 d __init_array_start                                |
+0000000000002000 R _IO_stdin_used                                    |
+                 w _ITM_deregisterTMCloneTable                       |
+                 w _ITM_registerTMCloneTable                         | 
+00000000000012c0 T __libc_csu_fini                                   | 
+0000000000001260 T __libc_csu_init                                   |  
+                 U __libc_start_main@GLIBC_2.2.5                     |
+00000000000011a5 T main                                              | 
+                 U printf@GLIBC_2.2.5                                |
+                 U puts@GLIBC_2.2.5                                  | 
+00000000000010e0 t register_tm_clones                                |
+0000000000001080 T _start                                            |
+0000000000001186 T SubsNum                                           | 
+0000000000004048 D __TMC_END__                                  -----+
+                 |________                                              
+|_______________|        |
+        |             Symbol Type
+Virtual address of
+ various symbols.
+```
+### Symbol Types:
+
+| Symbol TYPE  |                   Meaning                          |
+| ------------ | -------------------------------------------------- |
+|      A       |                Absolute Symbol                     |
+|      B       |   In the Uninitialized Data Section (BSS)          |
+|      D       |        In the initialized Data Section             |
+|      N       |               Debugging Symbol                     |
+|      T       |              In the Text Section                   |
+|      U       |        Symbol Undefined right now                  |
+
+- Lowercase is Local Symbol
+- Uppercase is External
+
+### Usage:
+```
+$ nm ./main3_debug
+0000000000001165 T AddNum
+                 U atoi@GLIBC_2.2.5 ----> Undefined
+000000000000404c B __bss_start
+000000000000404c b completed.0
+                 w __cxa_finalize@GLIBC_2.2.5
+0000000000004038 D __data_start
+0000000000004038 W data_start
+00000000000010b0 t deregister_tm_clones
+0000000000001120 t __do_global_dtors_aux
+0000000000003df0 d __do_global_dtors_aux_fini_array_entry
+0000000000004040 D __dso_handle
+0000000000003df8 d _DYNAMIC
+000000000000404c D _edata
+0000000000004058 B _end
+00000000000012c4 T _fini
+0000000000001160 t frame_dummy
+0000000000003de8 d __frame_dummy_init_array_entry
+00000000000021e4 r __FRAME_END__
+                 U getchar@GLIBC_2.2.5  --------------> Undefined
+0000000000004000 d _GLOBAL_OFFSET_TABLE_
+                 w __gmon_start__
+0000000000002050 r __GNU_EH_FRAME_HDR
+0000000000004050 B IamGlobalVariable
+0000000000004048 D IamInitializedGlobalVariable
+0000000000001000 t _init
+0000000000003df0 d __init_array_end
+0000000000003de8 d __init_array_start
+0000000000002000 R _IO_stdin_used
+                 w _ITM_deregisterTMCloneTable
+                 w _ITM_registerTMCloneTable
+00000000000012c0 T __libc_csu_fini
+0000000000001260 T __libc_csu_init
+                 U __libc_start_main@GLIBC_2.2.5 ---------------> Undefined
+00000000000011a5 T main
+                 U printf@GLIBC_2.2.5  ---> ...
+                 U puts@GLIBC_2.2.5  ------> ....
+00000000000010e0 t register_tm_clones
+0000000000001080 T _start
+0000000000001186 T SubsNum
+0000000000004050 D __TMC_END__
+```
+### To arrange the gaps in an order (the blanks are there because some of the symbols are not resolved with any virtual address)
+#### use: nm -n _[binary]_
+```
+$ nm -n ./main3_debug
+                 U atoi@GLIBC_2.2.5
+                 w __cxa_finalize@GLIBC_2.2.5
+                 U getchar@GLIBC_2.2.5
+                 w __gmon_start__
+                 w _ITM_deregisterTMCloneTable
+                 w _ITM_registerTMCloneTable
+                 U __libc_start_main@GLIBC_2.2.5
+                 U printf@GLIBC_2.2.5
+                 U puts@GLIBC_2.2.5
+0000000000001000 t _init
+0000000000001080 T _start
+00000000000010b0 t deregister_tm_clones
+00000000000010e0 t register_tm_clones
+0000000000001120 t __do_global_dtors_aux
+0000000000001160 t frame_dummy
+0000000000001165 T AddNum
+0000000000001186 T SubsNum
+00000000000011a5 T main
+0000000000001260 T __libc_csu_init
+00000000000012c0 T __libc_csu_fini
+00000000000012c4 T _fini
+0000000000002000 R _IO_stdin_used
+0000000000002050 r __GNU_EH_FRAME_HDR
+00000000000021e4 r __FRAME_END__
+0000000000003de8 d __frame_dummy_init_array_entry
+0000000000003de8 d __init_array_start
+0000000000003df0 d __do_global_dtors_aux_fini_array_entry
+0000000000003df0 d __init_array_end
+0000000000003df8 d _DYNAMIC
+0000000000004000 d _GLOBAL_OFFSET_TABLE_
+0000000000004038 D __data_start
+0000000000004038 W data_start
+0000000000004040 D __dso_handle
+0000000000004048 D IamInitializedGlobalVariable
+000000000000404c B __bss_start
+000000000000404c b completed.0
+000000000000404c D _edata
+0000000000004050 B IamGlobalVariable
+0000000000004050 D __TMC_END__
+0000000000004058 B _end
+
+$ nm -nr ./main3_debug
+0000000000004058 B _end
+0000000000004050 D __TMC_END__
+0000000000004050 B IamGlobalVariable
+000000000000404c D _edata
+000000000000404c b completed.0
+000000000000404c B __bss_start
+0000000000004048 D IamInitializedGlobalVariable
+0000000000004040 D __dso_handle
+0000000000004038 W data_start
+0000000000004038 D __data_start
+0000000000004000 d _GLOBAL_OFFSET_TABLE_
+0000000000003df8 d _DYNAMIC
+0000000000003df0 d __init_array_end
+0000000000003df0 d __do_global_dtors_aux_fini_array_entry
+0000000000003de8 d __init_array_start
+0000000000003de8 d __frame_dummy_init_array_entry
+00000000000021e4 r __FRAME_END__
+0000000000002050 r __GNU_EH_FRAME_HDR
+0000000000002000 R _IO_stdin_used
+00000000000012c4 T _fini
+00000000000012c0 T __libc_csu_fini
+0000000000001260 T __libc_csu_init
+00000000000011a5 T main
+0000000000001186 T SubsNum
+0000000000001165 T AddNum
+0000000000001160 t frame_dummy
+0000000000001120 t __do_global_dtors_aux
+00000000000010e0 t register_tm_clones
+00000000000010b0 t deregister_tm_clones
+0000000000001080 T _start
+0000000000001000 t _init
+                 U puts@GLIBC_2.2.5
+                 U printf@GLIBC_2.2.5
+                 U __libc_start_main@GLIBC_2.2.5
+                 w _ITM_registerTMCloneTable
+                 w _ITM_deregisterTMCloneTable
+                 w __gmon_start__
+                 U getchar@GLIBC_2.2.5
+                 w __cxa_finalize@GLIBC_2.2.5
+                 U atoi@GLIBC_2.2.5
+```
+### List of all the external symbols:
+
+#### Use: nm -g _[binary]_
+```
+$ nm -g ./main3_debug
+
+0000000000001165 T AddNum
+                 U atoi@GLIBC_2.2.5
+000000000000404c B __bss_start
+                 w __cxa_finalize@GLIBC_2.2.5
+0000000000004038 D __data_start
+0000000000004038 W data_start
+0000000000004040 D __dso_handle
+000000000000404c D _edata
+0000000000004058 B _end
+00000000000012c4 T _fini
+                 U getchar@GLIBC_2.2.5
+                 w __gmon_start__
+0000000000004050 B IamGlobalVariable
+0000000000004048 D IamInitializedGlobalVariable
+0000000000002000 R _IO_stdin_used
+                 w _ITM_deregisterTMCloneTable
+                 w _ITM_registerTMCloneTable
+00000000000012c0 T __libc_csu_fini
+0000000000001260 T __libc_csu_init
+                 U __libc_start_main@GLIBC_2.2.5
+00000000000011a5 T main
+                 U printf@GLIBC_2.2.5
+                 U puts@GLIBC_2.2.5
+0000000000001080 T _start
+0000000000001186 T SubsNum
+0000000000004050 D __TMC_END__
+```
+## Finding the size:
+
+```
+$ nm -S ./main3_debug
+
+0000000000001165 0000000000000021 T AddNum
+                 U atoi@GLIBC_2.2.5
+000000000000404c B __bss_start
+000000000000404c 0000000000000001 b completed.0
+                 w __cxa_finalize@GLIBC_2.2.5
+0000000000004038 D __data_start
+0000000000004038 W data_start
+00000000000010b0 t deregister_tm_clones
+0000000000001120 t __do_global_dtors_aux
+0000000000003df0 d __do_global_dtors_aux_fini_array_entry
+0000000000004040 D __dso_handle
+0000000000003df8 d _DYNAMIC
+000000000000404c D _edata
+0000000000004058 B _end
+00000000000012c4 T _fini
+0000000000001160 t frame_dummy
+0000000000003de8 d __frame_dummy_init_array_entry
+00000000000021e4 r __FRAME_END__
+                 U getchar@GLIBC_2.2.5
+0000000000004000 d _GLOBAL_OFFSET_TABLE_
+                 w __gmon_start__
+0000000000002050 r __GNU_EH_FRAME_HDR
+0000000000004050 0000000000000004 B IamGlobalVariable
+0000000000004048 0000000000000004 D IamInitializedGlobalVariable
+0000000000001000 t _init
+0000000000003df0 d __init_array_end
+0000000000003de8 d __init_array_start
+0000000000002000 0000000000000004 R _IO_stdin_used
+                 w _ITM_deregisterTMCloneTable
+                 w _ITM_registerTMCloneTable
+00000000000012c0 0000000000000001 T __libc_csu_fini
+0000000000001260 000000000000005d T __libc_csu_init
+                 U __libc_start_main@GLIBC_2.2.5
+00000000000011a5 00000000000000b1 T main
+                 U printf@GLIBC_2.2.5
+                 U puts@GLIBC_2.2.5
+00000000000010e0 t register_tm_clones
+0000000000001080 000000000000002b T _start
+0000000000001186 000000000000001f T SubsNum
+0000000000004050 D __TMC_END__
+```
+
+### Finding "**_Symbol types_**" with **grep**:
+
+```
+$ nm ./main3_debug | grep 'D'
+0000000000004038 D __data_start
+0000000000004040 D __dso_handle
+0000000000003df8 d _DYNAMIC
+000000000000404c D _edata
+00000000000021e4 r __FRAME_END__
+0000000000002050 r __GNU_EH_FRAME_HDR
+0000000000004048 D IamInitializedGlobalVariable ----------------> As IamInitializedGlobalVariable was intialised to 20
+0000000000004050 D __TMC_END__
+```
+ 
