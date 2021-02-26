@@ -163,7 +163,7 @@ Reading symbols from ./main2_debug...
 
 ## Now just take a look below:
 
-### Comparison among debug symbols: image has the result of the files present in the Video2 > part1 folder(through the concept is same for part1 and part2):
+### Comparison among debug symbols: image has the result of the files present in the Video2 > part1 folder(though the concept is same for part1 and part2):
 ![](https://github.com/reveng007/SGDE-2012/blob/main/GNU_debugger/Video2/part1/debug_symbols_comparison.png)
 
 ### Why are we concerned about debug symbols, how is it imp. from security perspective ?
@@ -203,7 +203,7 @@ $ strings main2_no_debug | wc -l
 80
 ```
 # From Here, I used files present in Video2 > part2 folder:
-# What if want to covert no_debugged_mode to debugged_mode
+# What if We want to covert no_debugged_mode to debugged_mode
 
 ## Adding Debug symbols to binary file:
 
@@ -220,7 +220,7 @@ $ gdb ./convert-no_debug_to_debug_objcopy
                       x --- snip --- x
 
 Reading symbols from ./convert-no_debug_to_debug_objcopy...
-Reading symbols from /home/kali/Desktop/ASM/Pentester-Academy/GNU_debugger/Video2/part2/main2_debug...
++Reading symbols from /home/kali/Desktop/ASM/Pentester-Academy/GNU_debugger/Video2/part2/main2_debug...
 (gdb) info functions 
 All defined functions:
 
