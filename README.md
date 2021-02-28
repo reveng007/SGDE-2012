@@ -4,6 +4,8 @@
  -----------------------------------------------
  -----------------------------------------------
 
+#### Also refer: https://psylinux.github.io/posts/getting-start-with-gdb/
+
 ### Without debug symbol:
 
 Eg: Description of the user
