@@ -167,7 +167,7 @@ Reading symbols from ./main2_debug...
 ## Now just take a look below:
 
 ### Comparison among debug symbols: image has the result of the files present in the Video2 > part1 folder(though the concept is same for part1 and part2):
-![](https://github.com/reveng007/SGDE-2012/blob/main/GNU_debugger/Video2/part1/debug_symbols_comparison.png)
+![](https://github.com/reveng007/SGDE-2012/blob/main/GNU_debugger/Video2/part1/debug_symbols_comparison.png?raw=true)
 
 ### Why are we concerned about debug symbols, how is it imp. from security perspective ?
 
