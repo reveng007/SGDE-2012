@@ -25,8 +25,7 @@ Eg: Description of user
 
 3. programming ---> C, python
 
-
-- **_✓ NOTE: More specific in presence of debug symbols._**
+**_✓ NOTE: More specific in presence of debug symbols._**
 
 # Video 2.
 ```
@@ -486,7 +485,7 @@ Local exec file:
 
 # Video 3. - Inspecting Symbols with NM
 
-### NM --> Lists Symbols from Object Files
+### NM --> Lists Symbols from Binary Files
 ```
 $ nm ./main2_debug                                         ----------+
 0000000000001165 T AddNum                                            |
@@ -772,4 +771,190 @@ $ nm ./main3_debug | grep 'D'
 0000000000004048 D IamInitializedGlobalVariable ----------------> As IamInitializedGlobalVariable was intialised to 20
 0000000000004050 D __TMC_END__
 ```
+# Video 4.(Systemcall Tracing with strace)
+
+- Helper tool to understand how program interact with the OS
+- Traces all System calls made by the program
+- Tells us about arguments passed and has great filtering capabilities
+
+### Use: strace ./[binary_file] [arguments]
+- "-o" output_file
+- "-t" for timestamp
+- "-r" for raltive timestamping
+- "-e" for tracing specific system calls ---> Use: strace -e [specifc system call] ./[binary] [arguments]
+#### or we can also combine multiple options. 
+
+### NOTE: "-o" ---> Unable to find how to use
+
+```
+$ strace ./main4_debug 20 30 
+
+execve("./main4_debug", ["./main4_debug", "20", "30"], 0x7ffd3b2e6460 /* 50 vars */) = 0  ---> Invokes the program
+brk(NULL)                               = 0x563a33bd9000
+access("/etc/ld.so.preload", R_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+fstat(3, {st_mode=S_IFREG|0644, st_size=119068, ...}) = 0
+mmap(NULL, 119068, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7f5d21550000
+close(3)                                = 0
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libc.so.6", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\3\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0@n\2\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0755, st_size=1839792, ...}) = 0
+mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7f5d2154e000
+mmap(NULL, 1852680, PROT_READ, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7f5d21389000
+mprotect(0x7f5d213ae000, 1662976, PROT_NONE) = 0
+mmap(0x7f5d213ae000, 1355776, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x25000) = 0x7f5d213ae000
+mmap(0x7f5d214f9000, 303104, PROT_READ, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x170000) = 0x7f5d214f9000
+mmap(0x7f5d21544000, 24576, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x1ba000) = 0x7f5d21544000
+mmap(0x7f5d2154a000, 13576, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x7f5d2154a000
+close(3)                                = 0
+arch_prctl(ARCH_SET_FS, 0x7f5d2154f540) = 0
+mprotect(0x7f5d21544000, 12288, PROT_READ) = 0
+mprotect(0x563a32e18000, 4096, PROT_READ) = 0
+mprotect(0x7f5d21598000, 4096, PROT_READ) = 0
+munmap(0x7f5d21550000, 119068)          = 0
+fstat(1, {st_mode=S_IFCHR|0620, st_rdev=makedev(0x88, 0), ...}) = 0
+brk(NULL)                               = 0x563a33bd9000
+brk(0x563a33bfa000)                     = 0x563a33bfa000
+write(1, "\n", 1
+)                       = 1
+write(1, "\n", 1
+)                       = 1
+write(1, " Simple Add/Substract\n", 22 Simple Add/Substract  
+) = 22
+write(1, "\n", 1
+)                       = 1
+write(1, "Sum of 20 + 30 = 50\n\n", 21Sum of 20 + 30 = 50    -------------> Addition
+
+) = 21
+write(1, "Difference of 20 - 30 = -10\n\n", 29Difference of 20 - 30 = -10  ----> Substraction
+
+) = 29
+fstat(0, {st_mode=S_IFCHR|0620, st_rdev=makedev(0x88, 0), ...}) = 0
+read(0, 0x563a33bd96b0, 1024)           = ? ERESTARTSYS (To be restarted if SA_RESTART is set)
+--- SIGWINCH {si_signo=SIGWINCH, si_code=SI_KERNEL} ---
+read(0, progressbar0x563a33bd96b0, 1024)           = ? ERESTARTSYS (To be restarted if SA_RESTART is set)
+--- SIGWINCH {si_signo=SIGWINCH, si_code=SI_KERNEL} ---
+
+read(0, | |                                 --------> Curser stays here -------> then click <enter>
+
+"progressbar\n", 1024)          = 12
+lseek(0, -11, SEEK_CUR)                 = -1 ESPIPE (Illegal seek)
+exit_group(0)                           = ?
++++ exited with 0 +++
+
+$
+```
+### This is because, the program is meant to be work like that way only.
+```
+$ ./main4_debug 20 30
+
+Simple Add/Substract
+
+Sum of 20 + 30 = 50
+
+Difference of 20 - 30 = -10 | | ------> Curser stays here --> then click <enter>
+
+             <---- Program terminates
+$
+```
+- mmap ----> memory mapping
+
+#### strace -e [specific systemcall] ./[binary_file] [arguments]
+
+```
+$ strace -e write ./main4_debug 20 30
+
+write(1, "\n", 1
+)                       = 1
+write(1, "\n", 1
+)                       = 1
+write(1, " Simple Add/Substract\n", 22 Simple Add/Substract
+) = 22
+write(1, "\n", 1
+)                       = 1
+write(1, "Sum of 20 + 30 = 50\n\n", 21Sum of 20 + 30 = 50
+
+) = 21
+write(1, "Difference of 20 - 30 = -10\n\n", 29Difference of 20 - 30 = -10
+
+) = 29
+
+| | ------> curser stoped here ----> press <enter>
+
++++ exited with 0 +++
+
+```
+
+### NOTE: 
+- "_strace_" can be used as to analyze interpretted language as well.
+
+### Attaching to a running process:
+```
+$ strace -p [PID]
+```
+
+### See this:
+![](https://github.com/reveng007/SGDE-2012/blob/main/GNU_debugger/Video4/strace_pid.png?raw=true)
+
+### Showing statistical data:
+### Use:
+#### strace -c [executable arguments]
+```
+$ strace -c nc google.com 80
+> GET \
+
+HTTP/1.0 500 Internal Server Error
+Content-Type: text/html; charset=UTF-8
+Date: Sun, 28 Feb 2021 05:33:02 GMT
+Server: gws
+Content-Length: 1730
+X-XSS-Protection: 0
+X-Frame-Options: SAMEORIGIN
+
+<!DOCTYPE html>
+<html lang=en>
+  <meta charset=utf-8>
+  <meta name=viewport content="initial-scale=1, minimum-scale=1, width=device-width">
+  <title>Error 500 (Server Error)!!1</title>
+  <style>
+    *{margin:0;padding:0}html,code{font:15px/22px arial,sans-serif}html{background:#fff;color:#222;padding:15px}body{margin:7% auto 0;max-width:390px;min-height:180px;padding:30px 0 15px}* > body{background:url(//www.google.com/images/errors/robot.png) 100% 5px no-repeat;padding-right:205px}p{margin:11px 0 22px;overflow:hidden}ins{color:#777;text-decoration:none}a img{border:0}@media screen and (max-width:772px){body{background:none;margin-top:0;max-width:none;padding-right:0}}#logo{background:url(//www.google.com/images/branding/googlelogo/1x/googlelogo_color_150x54dp.png) no-repeat;margin-left:-5px}@media only screen and (min-resolution:192dpi){#logo{background:url(//www.google.com/images/branding/googlelogo/2x/googlelogo_color_150x54dp.png) no-repeat 0% 0%/100% 100%;-moz-border-image:url(//www.google.com/images/branding/googlelogo/2x/googlelogo_color_150x54dp.png) 0}}@media only screen and (-webkit-min-device-pixel-ratio:2){#logo{background:url(//www.google.com/images/branding/googlelogo/2x/googlelogo_color_150x54dp.png) no-repeat;-webkit-background-size:100% 100%}}#logo{display:inline-block;height:54px;width:150px}
+  </style>
+  <a href=//www.google.com/><span id=logo aria-label=Google></span></a>
+  <p><b>500.</b> <ins>That’s an error.</ins>
+  <p>The server encountered an error and could not complete your request.<p>If the problem persists, please <A HREF="http://www.google.com/support/">report</A> your problem and mention this error message and the query that caused it.  <ins>That’s all we know.</ins>
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 32.90    0.000351         117         3           select
+ 32.80    0.000350         175         2           write
+ 15.28    0.000163           9        18           read
+ 12.09    0.000129           5        23         1 close
+  6.94    0.000074          37         2           alarm
+  0.00    0.000000           0        34        28 stat
+  0.00    0.000000           0        16           fstat
+  0.00    0.000000           0         2           poll
+  0.00    0.000000           0         4           lseek
+  0.00    0.000000           0        29           mmap
+  0.00    0.000000           0         9           mprotect
+  0.00    0.000000           0         5           munmap
+  0.00    0.000000           0         3           brk
+  0.00    0.000000           0         7           rt_sigaction
+  0.00    0.000000           0         1           rt_sigprocmask
+  0.00    0.000000           0         1           ioctl
+  0.00    0.000000           0         1         1 access
+  0.00    0.000000           0         2           getpid
+  0.00    0.000000           0         6           socket
+  0.00    0.000000           0         6         4 connect
+  0.00    0.000000           0         1           sendto
+  0.00    0.000000           0         1           recvfrom
+  0.00    0.000000           0         3           setsockopt
+  0.00    0.000000           0         1           execve
+  0.00    0.000000           0         1           uname
+  0.00    0.000000           0         1           arch_prctl
+  0.00    0.000000           0        48        32 openat
+------ ----------- ----------- --------- --------- ----------------
+100.00    0.001067           4       230        66 total
+```
+## So, Why all this is important ?
+
+- It can be useful to set break points to many of systemcalls while running gdb, i.e., changing/manipoulating things at run time.
  
