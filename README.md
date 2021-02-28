@@ -957,4 +957,109 @@ X-Frame-Options: SAMEORIGIN
 ## So, Why all this is important ?
 
 - It can be useful to set break points to many of systemcalls while running gdb, i.e., changing/manipoulating things at run time.
- 
+
+
+# Video 5.(Breakpoints, Examining registers and Memory)
+
+## What is Breakpoint ?
+
+- Technique used to "Pause" the program during execution based on certain criteria
+- Criteria can be "about to execute an instruction" (which we want to examine)
+- Debugger allows you to inspect/ modify CPU Registers, Memory, Data, etc.
+
+```
+$ cat main5.c 
+
+#include<stdio.h>
+#include<string.h>
+
+void EchoInput(char *userInput)
+{
+	char buffer[20];
+
+	strcpy(buffer, userInput);
+
+	printf("\n\n%s\n\n", buffer);
+}
+
+int main(int argc, char **argv)
+{
+	EchoInput(argv[1]);
+
+	return 0;
+}
+```
+```
+$ gcc main5.c -ggdb -o main5_debug
+$ ./main5_debug "Reveng Hiiiiiiiiiiiiiiiiiiiiiii"
+
+Reveng Hiiiiiiiiiiiiiiiiiiiiiii                              ----------> within 20 char buffer size
+
+$ ./main5_debug "Reveng Hiiiiiiiiiiiiiiiiiiiiiiii"
+
+Reveng Hiiiiiiiiiiiiiiiiiiiiiiii      -------> excided 20 char buffer size, segmentation fault ==> buffer overflow
+
+sh: “./main5_debug "Reveng Hiiiiiiii…” terminated by signal SIGSEGV (Address boundary error)
+
+```
+
+### Opening binary in gdb
+```
+$ gdb ./main5_debug
+
+                               x -- snip -- x
+
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from ./main5_debug...
+(gdb) run Reveng
+Starting program: /home/kali/Desktop/ASM/Pentester-Academy/GNU_debugger/Video5/main5_debug Reveng
+
+
+Reveng
+
+[Inferior 1 (process 467424) exited normally]
+```
+```
+(gdb) list 1
+1	#include<stdio.h>
+2	#include<string.h>
+3	
+4	void EchoInput(char *userInput)
+5	{
+6	  char buffer[20];
+7	
+8		strcpy(buffer, userInput);
+9	
+10  printf("\n\n%s\n\n", buffer);
+(gdb) 
+11	}
+12	
+13	int main(int argc, char **argv)
+14	{
+15		EchoInput(argv[1]);
+16	
+17		return 0;
+18	}
+19	
+20
+```
+### So, whats the difference between running binary in gdb and in terminal
+
+### Actually, till now we haven't done that thing. Now, lets come into breakpoint
+
+```diff
+ (gdb) break main
+ Breakpoint 1 at 0x118e: file main5.c, line 15.
+ (gdb)  list 15
+ 10		 printf("\n\n%s\n\n", buffer);
+ 11	 }
+ 12	
+-13	int main(int argc, char **argv)      ---------------> We mentioned breakpoint at main but breakpoint was applied at line 15..why ?? It was supposed to be line 13
+ 14	 {
+ 15	 	 EchoInput(argv[1]);
+ 16	
+ 17		 return 0;
+ 18	 }
+ 19	
+ (gdb) 
+```
