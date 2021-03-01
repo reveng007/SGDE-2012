@@ -4,8 +4,6 @@
  -----------------------------------------------
  -----------------------------------------------
 
-#### Also refer: https://psylinux.github.io/posts/getting-start-with-gdb/
-
 ### Without debug symbol:
 
 Eg: Description of the user
@@ -1047,10 +1045,18 @@ Reveng
 ```
 ### So, whats the difference between running binary in gdb and in terminal
 
-### Actually, till now we haven't done that thing. Now, lets come into breakpoint
+#### Actually, till now we haven't done that thing. Now, lets come into breakpoint
 
+### Adding breakpoints:
+
+1. break function_name
+2. break address
+3. break line_number
+4. ...
+
+#### 1. Applying breakpoint using function_name:
 ```diff
- (gdb) break main
++(gdb) break main --------------->
  Breakpoint 1 at 0x118e: file main5.c, line 15.
  (gdb)  list 15
  10		 printf("\n\n%s\n\n", buffer);
@@ -1062,6 +1068,285 @@ Reveng
  16	
  17		 return 0;
  18	 }
+ 19
+ ```
+ 
+ #### 2. Applying breakpoint using line_number:
+
+ ```
+ (gdb) info breakpoints 
+ Num     Type           Disp Enb Address            What
+ 4       breakpoint     keep y   0x0000555555555151 in EchoInput at main5.c:8
++(gdb) break 13
+ Breakpoint 7 at 0x55555555518e: file main5.c, line 15.
+ (gdb) list 15
+ 10		printf("\n\n%s\n\n", buffer);
+ 11	}
+ 12	
+-13	int main(int argc, char **argv)       ---------------> We mentioned breakpoint at main but breakpoint was applied at line 15..why ?? It was supposed to be line 13
+ 14	{
+ 15		EchoInput(argv[1]);
+ 16	
+ 17		return 0;
+ 18	}
  19	
- (gdb) 
 ```
+#### 3. Applying breakpoint using address:
+```
+(gdb) break *0x00005555555551a1
+Breakpoint 8 at 0x5555555551a1: file main5.c, line 17.
+(gdb) info breakpoints 
+Num     Type           Disp Enb Address            What
+4       breakpoint     keep y   0x0000555555555151 in EchoInput at main5.c:8
+7       breakpoint     keep y   0x000055555555518e in main at main5.c:15
+8       breakpoint     keep y   0x00005555555551a1 in main at main5.c:17
+```
+see this from here: https://youtu.be/qv8M10fsXFg?t=1421
+
+### Checking register Statistics:
+```diff
++(gdb) run Reveng         --------------> running the binary
+Starting program: /home/kali/Desktop/ASM/Pentester-Academy/GNU_debugger/Video5/main5_debug Reveng
+
+                         |------------------------------------------------>   1. binary file  2. argument => Reveng
+Breakpoint 1, main (argc=2, argv=0x7fffffffdf08) at main5.c:15
+15		EchoInput(argv[1]);
++(gdb) info registers 
+rax            0x55555555517f      93824992235903
+rbx            0x0                 0
+rcx            0x7ffff7fa5718      140737353766680
+rdx            0x7fffffffdf20      140737488346912
+rsi            0x7fffffffdf08      140737488346888
+rdi            0x2                 2
+rbp            0x7fffffffde10      0x7fffffffde10
+rsp            0x7fffffffde00      0x7fffffffde00
+r8             0x0                 0
+r9             0x7ffff7fe2180      140737354015104
+r10            0x3                 3
+r11            0x2                 2
+r12            0x555555555060      93824992235616
+r13            0x0                 0
+r14            0x0                 0
+r15            0x0                 0
+rip            0x55555555518e      0x55555555518e <main+15>  -------> pointing to the instruction which would be executed next
+eflags         0x206               [ PF IF ]
+cs             0x33                51
+ss             0x2b                43
+ds             0x0                 0
+es             0x0                 0
+fs             0x0                 0
+gs             0x0                 0
+```
+### To confirm this case: why "argc=2" is outputed in the terminal:-
+```
+(gdb) print argv[1]
+$1 = 0x7fffffffe273 "Reveng"
+(gdb) print argv[0]
+$2 = 0x7fffffffe22a "/home/kali/Desktop/ASM/Pentester-Academy/GNU_debugger/Video5/main5_debug"
+
+```
+```
+(gdb) break EchoInput 
+Breakpoint 3 at 0x555555555151: file main5.c, line 8.
+
+(gdb) info breakpoints 
+Num     Type           Disp Enb Address            What
+1       breakpoint     keep y   0x000055555555518e in main at main5.c:15
+	breakpoint already hit 1 time
+3       breakpoint     keep y   0x0000555555555151 in EchoInput at main5.c:8
+```
+### To delete breakpoints:
+```diff
++(gdb) delete 3
+
+(gdb) info breakpoints 
+Num     Type           Disp Enb Address            What
+1       breakpoint     keep y   0x000055555555518e in main at main5.c:15
+	breakpoint already hit 1 time
+
+(gdb) break EchoInput 
+Breakpoint 4 at 0x555555555151: file main5.c, line 8.
+
+(gdb) info breakpoints 
+Num     Type           Disp Enb Address            What
+1       breakpoint     keep y   0x000055555555518e in main at main5.c:15
+	breakpoint already hit 1 time
+4       breakpoint     keep y   0x0000555555555151 in EchoInput at main5.c:8
+```
+### To disable breakpoint:
+```diff
++(gdb) disable 4
+(gdb) info breakpoints 
+Num     Type           Disp Enb Address            What
+1       breakpoint     keep y   0x000055555555518e in main at main5.c:15
+	breakpoint already hit 1 time
+4       breakpoint     keep n   0x0000555555555151 in EchoInput at main5.c:8
+                            ^
+                            |--------------------------------------------------- Enable mode set to: n
+```
+### To enable breakpoint:
+```diff
++(gdb) enable 4
+(gdb) info breakpoints 
+Num     Type           Disp Enb Address            What
+1       breakpoint     keep y   0x000055555555518e in main at main5.c:15
+	breakpoint already hit 1 time
+4       breakpoint     keep y   0x0000555555555151 in EchoInput at main5.c:8
+                            ^
+                            |--------------------------------------------------- Enable mode set to: y
+```
+### To examine the Memory using "**_examine_**" command:
+```diff
++(gdb) help x                   -------------> x = examine
++Examine memory: x/FMT ADDRESS.   -------------------------------> usage format
+ADDRESS is an expression for the memory address to examine.
+FMT is a repeat count followed by a format letter and a size letter.
+Format letters are o(octal), x(hex), d(decimal), u(unsigned decimal),
+  t(binary), f(float), a(address), i(instruction), c(char), s(string)
+  and z(hex, zero padded on the left).
+Size letters are b(byte), h(halfword), w(word), g(giant, 8 bytes).
+The specified number of objects of the specified size are printed
+according to the format.  If a negative number is specified, memory is
+examined backward from the address.
+
+Defaults for format and size letters are those previously used.
+Default count is 1.  Default address is following last thing printed
+with this command or "print".
++(gdb) x/s argv[1]
+0x7fffffffe273:	"Reveng"
++(gdb) x/o argv[1]
+0x7fffffffe273:	0122
++(gdb) x/x argv[1]
+0x7fffffffe273:	0x52
++(gdb) x/d argv[1]
+0x7fffffffe273:	82
++(gdb) x/u argv[1]
+0x7fffffffe273:	82
++(gdb) x/t argv[1]
+0x7fffffffe273:	01010010
++(gdb) x/f argv[1]
+0x7fffffffe273:	6.6831191462912155e+91
++(gdb) x/a argv[1]
+0x7fffffffe273:	0x5300676e65766552
+```
+### To diassemble a function:
+```diff
++(gdb) disassemble main
+Dump of assembler code for function main:
+   0x000055555555517f <+0>:	push   %rbp
+   0x0000555555555180 <+1>:	mov    %rsp,%rbp
+   0x0000555555555183 <+4>:	sub    $0x10,%rsp
+   0x0000555555555187 <+8>:	mov    %edi,-0x4(%rbp)
+   0x000055555555518a <+11>:	mov    %rsi,-0x10(%rbp)
+=> 0x000055555555518e <+15>:	mov    -0x10(%rbp),%rax ------------> Here, '=>' indicates where 'rip' is actually pointing to.
+   0x0000555555555192 <+19>:	add    $0x8,%rax
+   0x0000555555555196 <+23>:	mov    (%rax),%rax
+   0x0000555555555199 <+26>:	mov    %rax,%rdi
+   0x000055555555519c <+29>:	call   0x555555555145 <EchoInput>
+   0x00005555555551a1 <+34>:	mov    $0x0,%eax
+   0x00005555555551a6 <+39>:	leave  
+   0x00005555555551a7 <+40>:	ret    
+End of assembler dump.
++(gdb) disassemble EchoInput 
+Dump of assembler code for function EchoInput:
+   0x0000555555555145 <+0>:	push   %rbp
+   0x0000555555555146 <+1>:	mov    %rsp,%rbp
+   0x0000555555555149 <+4>:	sub    $0x30,%rsp
+   0x000055555555514d <+8>:	mov    %rdi,-0x28(%rbp)
+   0x0000555555555151 <+12>:	mov    -0x28(%rbp),%rdx
+   0x0000555555555155 <+16>:	lea    -0x20(%rbp),%rax
+   0x0000555555555159 <+20>:	mov    %rdx,%rsi
+   0x000055555555515c <+23>:	mov    %rax,%rdi
+   0x000055555555515f <+26>:	call   0x555555555030 <strcpy@plt>
+   0x0000555555555164 <+31>:	lea    -0x20(%rbp),%rax
+   0x0000555555555168 <+35>:	mov    %rax,%rsi
+   0x000055555555516b <+38>:	lea    0xe92(%rip),%rdi        # 0x555555556004
+   0x0000555555555172 <+45>:	mov    $0x0,%eax
+   0x0000555555555177 <+50>:	call   0x555555555040 <printf@plt>
+   0x000055555555517c <+55>:	nop
+   0x000055555555517d <+56>:	leave  
+   0x000055555555517e <+57>:	ret    
+End of assembler dump.
+```
+### Just onething:
+```diff
+ (gdb) info registers 
+
+                   x --- snip --- x   
+
++rip            0x55555555518e      0x55555555518e <main+15>
+
+                   x --- snip --- x
+
+ (gdb) disassemble main
+ Dump of assembler code for function main:
+
+                    x --- snip --- x
+
++=> 0x000055555555518e <+15>:	 mov    -0x10(%rbp),%rax
+
+                    x --- snip --- x
+```
+
+#### In the above console, green lines showed us that rip (rip in x86_64, eip in x86) is pointing to 0x55555555518e address.
+### But what is this:        
+``` 
+mov    -0x10(%rbp),%rax 
+```
+###  in disassemble main ouput?
+
+#### We can use: examine command
+```
+(gdb) help x
+
+                      x --- snip --- x
+
+  x --- snip --- x    i(instruction)     x --- snip --- x
+
+                      x --- snip --- x
+
+```
+##### i(instruction) ---> convert instruction to ASM language 
+### => Basically, for decoding to ASM
+```
+(gdb) x/i 0x55555555518e
+=> 0x55555555518e <main+15>:	mov    -0x10(%rbp),%rax
+```
+##### This is the thing what we got previously in the output of "disassemble main"
+```
+mov    -0x10(%rbp),%rax
+```
+### For decoding multiple instructions to ASM
+```
+        +--------------------->[number of instructions]
+        |
+(gdb) x/10i 0x55555555518e
+=> 0x55555555518e <main+15>:	mov    -0x10(%rbp),%rax
+   0x555555555192 <main+19>:	add    $0x8,%rax
+   0x555555555196 <main+23>:	mov    (%rax),%rax
+   0x555555555199 <main+26>:	mov    %rax,%rdi
+   0x55555555519c <main+29>:	call   0x555555555145 <EchoInput>
+   0x5555555551a1 <main+34>:	mov    $0x0,%eax
+   0x5555555551a6 <main+39>:	leave  
+   0x5555555551a7 <main+40>:	ret    
+   0x5555555551a8:	nopl   0x0(%rax,%rax,1)
+   0x5555555551b0 <__libc_csu_init>:	push   %r15
+```
+### For decoding multiple instructions to Hex
+
+#### Usage: x/[number]xw [address/instruction/$[register name] ]
+```
+(gdb) x/10xw 0x7fffffffde00
+0x7fffffffde00:	0xffffdf08	0x00007fff	0x00000000	0x00000002
+0x7fffffffde10:	0x555551b0	0x00005555	0xf7e0dd0a	0x00007fff
+0x7fffffffde20:	0xffffdf08	0x00007fff
+
+(gdb) x/10xw $rsp
+0x7fffffffde00:	0xffffdf08	0x00007fff	0x00000000	0x00000002
+0x7fffffffde10:	0x555551b0	0x00005555	0xf7e0dd0a	0x00007fff
+0x7fffffffde20:	0xffffdf08	0x00007fff
+
+```
+
+
+ 
