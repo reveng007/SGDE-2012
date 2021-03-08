@@ -4,9 +4,6 @@
  -----------------------------------------------
  -----------------------------------------------
 
-All this notes are taken from here: [SGDE 2012](https://www.youtube.com/playlist?list=PLfpQOoR6-z-rQpwDygoZuHSNCCZBHomlF)
-
-
 ### Without debug symbol:
 
 Eg: Description of the user
@@ -774,7 +771,7 @@ $ nm ./main3_debug | grep 'D'
 0000000000004048 D IamInitializedGlobalVariable ----------------> As IamInitializedGlobalVariable was intialised to 20
 0000000000004050 D __TMC_END__
 ```
-# Video 4.(Systemcall Tracing with strace)
+# Video 4 - Systemcall Tracing with strace
 
 - Helper tool to understand how program interact with the OS
 - Traces all System calls made by the program
@@ -962,7 +959,7 @@ X-Frame-Options: SAMEORIGIN
 - It can be useful to set break points to many of systemcalls while running gdb, i.e., changing/manipoulating things at run time.
 
 
-# Video 5.(Breakpoints, Examining registers and Memory)
+# Video 5 - Breakpoints, Examining registers and Memory
 
 ## What is Breakpoint ?
 
@@ -1048,7 +1045,7 @@ Reveng
 ```
 ### So, whats the difference between running binary in gdb and in terminal
 
-#### Actually, till now we haven't done that thing. Now, lets come into breakpoint
+#### Actually, till now we haven't done that thing. Now, lets come into breakpoint, We will know why..?
 
 ### Adding breakpoints:
 
@@ -1096,6 +1093,8 @@ Reveng
 ```
 #### 3. Applying breakpoint using address:
 ```
+            |-------------------------------- add * in front of address
+            V
 (gdb) break *0x00005555555551a1
 Breakpoint 8 at 0x5555555551a1: file main5.c, line 17.
 (gdb) info breakpoints 
@@ -1215,11 +1214,11 @@ examined backward from the address.
 Defaults for format and size letters are those previously used.
 Default count is 1.  Default address is following last thing printed
 with this command or "print".
-+(gdb) x/s argv[1]
++(gdb) x/s argv[1]             ---->   (gdb) print argv[1] would also give the same output
 0x7fffffffe273:	"Reveng"
 +(gdb) x/o argv[1]
 0x7fffffffe273:	0122
-+(gdb) x/x argv[1]
++(gdb) x/x argv[1] 
 0x7fffffffe273:	0x52
 +(gdb) x/d argv[1]
 0x7fffffffe273:	82
@@ -1350,6 +1349,433 @@ mov    -0x10(%rbp),%rax
 0x7fffffffde20:	0xffffdf08	0x00007fff
 
 ```
+# Video 6.- Modifying data in Memory and changing CPU registers at run time
 
+- Two basic steps to gain power:
+1. Modify CPU Registers
+2. Modify Data in Memory
+
+```diff
+$ gdb ./main6_debug 
+
+                                               x --- snip --- x
+
+Reading symbols from ./main6_debug...
+(gdb) info breakpoints 
+No breakpoints or watchpoints.
+(gdb) break main
+Breakpoint 2 at 0x5555555551d6: file main6.c, line 26.
+(gdb) info breakpoints 
+Num     Type           Disp Enb Address            What
+2       breakpoint     keep y   0x00005555555551d6 in main at main6.c:26
+(gdb) run aaaaaaaaaaa 20 34
+The program being debugged has been started already.
+Start it from the beginning? (y or n) y
+Starting program: /home/kali/Desktop/ASM/Pentester-Academy/GNU_debugger/Video6/main6_debug aaaaaaaaaaa 20 34
+
+Breakpoint 2, main (argc=4, argv=0x7fffffffdef8) at main6.c:26
+26		int sum = 0;
++(gdb) print argv[1]
+$6 = 0x7fffffffe269 'a' <repeats 11 times>
++(gdb) print argv[2]
+$7 = 0x7fffffffe275 "20"
++(gdb) print argv[3]
+$8 = 0x7fffffffe278 "34"
+(gdb) print argv[4]
+$9 = 0x0
+                      ascii char
+                         |  | 
++(gdb) x/5c argv[1]      V  V
+0x7fffffffe269:	97 'a'	97 'a'	97 'a'	97 'a'	97 'a'
++(gdb) set {char} 0x7fffffffe269 = 'B' ---> to change the 1st occuring char to 'B' of the the specified address
++(gdb) x/5c argv[1]
+0x7fffffffe269:	66 'B'	97 'a'	97 'a'	97 'a'	97 'a' 
++(gdb) set {char} 0x7fffffffe269 = 'b'
++(gdb) x/5c argv[1]
+0x7fffffffe269:	98 'b'	97 'a'	97 'a'	97 'a'	97 'a'
+```
+### Now if I want to change every value of 'a' to any other character:
+##### Use: set {char} address/(address + 1....n) = "N" where N= anything except string
+### NOTE:
+- Although we can write string in memory but that way is different.
+```
+(gdb) x/5c argv[1]
+0x7fffffffe269:	0 '\000'	0 '\000'	0 '\000'	0 '\000'	97 'a'
+(gdb) set {char} 0x7fffffffe269 = 'B'
+(gdb) set {char} (0x7fffffffe269 + 1) = 'B'
+(gdb) set {char} (0x7fffffffe269 + 2) = 'B'
+(gdb) set {char} (0x7fffffffe269 + 3) = 'B'
+(gdb) x/5c argv[1]
+0x7fffffffe269:	66 'B'	66 'B'	66 'B'	66 'B'	97 'a'
+
+(gdb) set {char} (0x7fffffffe269 + 4) = 'ok'
+Invalid character constant.
+(gdb) set {char} (0x7fffffffe269 + 4) = '3'      -----------> here 3 is a integer => as ascii value of int 3 is 51
+(gdb) x/5c argv[1]
+0x7fffffffe269:	66 'B'	66 'B'	66 'B'	66 'B'	51 '3'
+(gdb) set {char} (0x7fffffffe269 + 4) = 3 
+(gdb) x/5c argv[1]
+0x7fffffffe269:	66 'B'	66 'B'	66 'B'	66 'B'	3 '\003'
+
+(gdb) c
+Continuing.
+
+
+BBBB
+
+
+Sum of 20 + 34 is 54
+
+[Inferior 1 (process 98341) exited normally]
+(gdb) 
+
+```
+### See the below mentioned text throughly, in this section many mistkes are shown(intensionally), to clear things a bit more:
+```
+$ gdb ./main6_debug
+
+Reading symbols from ./main6_debug...
+(gdb) break main
+Breakpoint 1 at 0x11d6: file main6.c, line 26.
+(gdb) c
+The program is not being run.
+(gdb) run AAAA 10 90
+Starting program: /home/kali/Desktop/ASM/Pentester-Academy/GNU_debugger/Video6/main6_debug AAAA 10 90
+
+Breakpoint 1, main (argc=4, argv=0x7fffffffdef8) at main6.c:26
+26		int sum = 0;
+
+(gdb) c
+Continuing.
+
+
+AAAA
+
+Sum of 10 + 90 is 100
+
+[Inferior 1 (process 100783) exited normally]
+
+(gdb) print sum
+No symbol "sum" in current context.
+(gdb) print argv[1]
+No symbol "argv" in current context.
+(gdb) c
+The program is not being run.
+(gdb) run AAAA 10 80
+Starting program: /home/kali/Desktop/ASM/Pentester-Academy/GNU_debugger/Video6/main6_debug AAAA 10 80
+
+Breakpoint 1, main (argc=4, argv=0x7fffffffdef8) at main6.c:26
+26		int sum = 0;
+(gdb) print argv[1]
+$1 = 0x7fffffffe270 "AAAA"
+(gdb) print argv[2]
+$2 = 0x7fffffffe275 "10"
+(gdb) c
+Continuing.
+
+
+AAAA
+
+Sum of 10 + 80 is 90
+
+[Inferior 1 (process 100815) exited normally]
+
+```
+
+
+
+### Lets change the interpretation from char to int:
+```diff
+$ gdb ./main6_debug 
+
+                                               x --- snip --- x
+
+Reading symbols from ./main6_debug...
+(gdb) info breakpoints 
+No breakpoints or watchpoints.
+(gdb) break main
+Breakpoint 2 at 0x5555555551d6: file main6.c, line 26.
+(gdb) info breakpoints 
+Num     Type           Disp Enb Address            What
+2       breakpoint     keep y   0x00005555555551d6 in main at main6.c:26
+(gdb) run aaaa 10 30
+Starting program: /home/kali/Desktop/ASM/Pentester-Academy/GNU_debugger/Video6/main6_debug aaaa 10 30
+
+Breakpoint 1, main (argc=4, argv=0x7fffffffdef8) at main6.c:26
+26		int sum = 0;
+(gdb) x/5c argv[1]
+0x7fffffffe270:	97 'a'	97 'a'	97 'a'	97 'a'	0 '\000'
+(gdb) set {char} 0x7fffffffe270 = 'B'
+(gdb) set {char} (0x7fffffffe270 + 1) = 'B'
+(gdb) set {char} (0x7fffffffe270 + 2) = 'B'
+(gdb) set {char} (0x7fffffffe270 + 3) = 'B'
+(gdb) x/5c argv[1]
+0x7fffffffe270:	66 'B'	66 'B'	66 'B'	66 'B'	0 '\000'
+(gdb) c
+Continuing.
+
+
+BBBB
+
+Sum of 10 + 30 is 40
+
+[Inferior 1 (process 101012) exited normally]
+
+
+```
+### We can see here that some change did happened.
+
+### Adding another breakpoint: Please see every step carefully:
+
+```diff
+$ gdb ./main6_debug
+
+                                          x --- snip --- x
+
+Reading symbols from ./main6_debug...
++(gdb) run AAAA 10 90                   --------------> without applying any breakpoint (ran 1st time)
+Starting program: /home/kali/Desktop/ASM/Pentester-Academy/GNU_debugger/Video6/main6_debug AAAA 10 90
+
+
+AAAA
+
+Sum of 10 + 90 is 100
+
+[Inferior 1 (process 109749) exited normally]
+-(gdb) c                               ---------> Nothing to continue as it has run successfully before
+The program is not being run.
++(gdb) break main                   ----------------------> applying 1st break point (ran 2nd time)
+Breakpoint 1 at 0x5555555551d6: file main6.c, line 26.
+-(gdb) c                                   --------------> Nothing to run as it has ran before sucessfully (fully)
+The program is not being run.
++(gdb) run AAAA 10 80             -------------> So we are running it again
+Starting program: /home/kali/Desktop/ASM/Pentester-Academy/GNU_debugger/Video6/main6_debug AAAA 10 80
+
++Breakpoint 1, main (argc=4, argv=0x7fffffffdef8) at main6.c:26  --------> didnot get any output
+-warning: Source file is more recent than executable.        ---------> as we applied a breakpoint we have to see output seperately as done below within square bracket.
+26		int sum = 0;
+-(gdb) print sum           -----------> sum will not give the added value as at main breakpoint was added and sum variable is present within main function. 
+$2 = 21845
++(gdb) print argv[1]                           ----+
+$1 = 0x7fffffffe270 "AAAA"                         |   
++(gdb) print argv[2]                               | 
+$2 = 0x7fffffffe275 "10"                           |
++(gdb) print argv[3]                               |
+$3 = 0x7fffffffe278 "80"                           |
++(gdb) c                                           |--------> lets see the outputs...
+Continuing.                                        |
+                                                   |
+                                                   |
+AAAA                                               |
+                                                   |
+Sum of 10 + 80 is 90                               | 
+                                                   | 
+[Inferior 1 (process 110171) exited normally]  ----+
+-(gdb) print argv[2]                   ------> we can not see the ouput again as we have seen it before
+No symbol "argv" in current context.
+(gdb) l
+21		return i + j;
+22	}
+23	
+24	int main(int argc, char **argv)
+25	{
+26		int sum = 0;
+27	
+28		EchoInput(argv[1]);
+29	
+30		sum = AddNumbers(atoi(argv[2]), atoi(argv[3]));
+(gdb) 
+31	
+32		printf("Sum of %s + %s is %d\n\n", argv[2], argv[3], sum );
+33	
+34		return 0;
+35	
+36	}
+37	
++(gdb) break 32                    ------------------>     applying 2nd break point
+Breakpoint 2 at 0x555555555224: file main6.c, line 32.
+(gdb) c
+-The program is not being run.      -------------------------------> Clearly speaking program is not being run
+
++(gdb) run AAAA 10 100               ----------------->  ran the binary but as the break point was applied we have to see the result manually
+Starting program: /home/kali/Desktop/ASM/Pentester-Academy/GNU_debugger/Video6/main6_debug AAAA 10 100
+
+Breakpoint 1, main (argc=4, argv=0x7fffffffdef8) at main6.c:26
+26		int sum = 0;
++(gdb) c                ------------->     Now, we can continue as we have run the binary before
+Continuing.
+
+
+AAAA
+
+
+Breakpoint 2, main (argc=4, argv=0x7fffffffdef8) at main6.c:32
+32		printf("Sum of %s + %s is %d\n\n", argv[2], argv[3], sum );
++(gdb) print sum                        -------------------------------> No we got the sum value as breakpoint was applied at printing statement not on the value assigning line.
+$1 = 110      
+
+```
+### Now, lets manipulate the result:
+##### Use: set variable = [value]
+```diff
++(gdb) set sum = 2000
+(gdb) c
+Continuing.
+Sum of 10 + 100 is 2000
+
+[Inferior 1 (process 111050) exited normally]
+
+```
+### With gdb we can not only change values, varibles, etc present in memory but also we can change CPU registers at run time.
+```diff
+(gdb) info functions 
+All defined functions:
+
+File main6.c:
+19:	int AddNumbers(int, int);
+10:	void EchoInput(char *);
+5:	void FunctionShouldNotExecute(void);
+24:	int main(int, char **);
+
+Non-debugging symbols:
+0x0000555555555000  _init
+0x0000555555555030  strcpy@plt
+0x0000555555555040  puts@plt
+0x0000555555555050  printf@plt
+0x0000555555555060  atoi@plt
+0x0000555555555070  __cxa_finalize@plt
+0x0000555555555080  _start
+0x00005555555550b0  deregister_tm_clones
+0x00005555555550e0  register_tm_clones
+0x0000555555555120  __do_global_dtors_aux
+0x0000555555555160  frame_dummy
+0x0000555555555260  __libc_csu_init
+0x00005555555552c0  __libc_csu_fini
+0x00005555555552c4  _fini
+0x00007ffff7fd3010  _dl_catch_exception@plt
+0x00007ffff7fd3020  malloc@plt
+0x00007ffff7fd3030  _dl_signal_exception@plt
+0x00007ffff7fd3040  calloc@plt
+0x00007ffff7fd3050  realloc@plt
+0x00007ffff7fd3060  _dl_signal_error@plt
+0x00007ffff7fd3070  _dl_catch_error@plt
+0x00007ffff7fd3080  free@plt
+0x00007ffff7fdbbe0  _dl_rtld_di_serinfo
+0x00007ffff7fe2560  _dl_debug_state
+0x00007ffff7fe4090  _dl_mcount
+0x00007ffff7fe4990  _dl_get_tls_static_info
+0x00007ffff7fe4a80  _dl_allocate_tls_init
+0x00007ffff7fe4cc0  _dl_allocate_tls
+0x00007ffff7fe4d30  _dl_deallocate_tls
+0x00007ffff7fe5410  _dl_make_stack_executable
+0x00007ffff7fe5760  _dl_find_dso_for_object
+0x00007ffff7fe86d0  _dl_exception_create
+0x00007ffff7fe87b0  _dl_exception_create_format
+0x00007ffff7fe8c50  _dl_exception_free
+0x00007ffff7fe9c90  __tunable_get_val
+0x00007ffff7fea440  __tls_get_addr
+0x00007ffff7fea480  __get_cpu_features
+--Type <RET> for more, q to quit, c to continue without paging--q
+Quit
+(gdb) print FunctionShouldNotExecute 
+$2 = {void (void)} 0x555555555165 <FunctionShouldNotExecute>
++(gdb) info registers                 ----------------------------> As program is not running
+The program has no registers now.
+(gdb) run AA 10 20
+Starting program: /home/kali/Desktop/ASM/Pentester-Academy/GNU_debugger/Video6/main6_debug AA 10 20
+
+Breakpoint 1, main (argc=4, argv=0x7fffffffdef8) at main6.c:26
+26		int sum = 0;
+(gdb) info registers 
++rax            0x5555555551c6      93824992235974   ----------------> let us change value of this register
+rbx            0x0                 0
+rcx            0x7ffff7fa5718      140737353766680
+rdx            0x7fffffffdf20      140737488346912
+rsi            0x7fffffffdef8      140737488346872
+rdi            0x4                 4
+rbp            0x7fffffffde00      0x7fffffffde00
+rsp            0x7fffffffddd0      0x7fffffffddd0
+r8             0x0                 0
+r9             0x7ffff7fe2180      140737354015104
+r10            0x3                 3
+r11            0x2                 2
+r12            0x555555555080      93824992235648
+r13            0x0                 0
+r14            0x0                 0
+r15            0x0                 0
+rip            0x5555555551d6      0x5555555551d6 <main+16>
+eflags         0x202               [ IF ]
+cs             0x33                51
+ss             0x2b                43
+ds             0x0                 0
+es             0x0                 0
+fs             0x0                 0
+gs             0x0                 0
++(gdb) set $rax = 10       ---------------> Let's change value of this register to 10
+(gdb) info registers 
++rax            0xa                 10 ---------------> Changed to 10
+rbx            0x0                 0
+rcx            0x7ffff7fa5718      140737353766680
+rdx            0x7fffffffdf20      140737488346912
+rsi            0x7fffffffdef8      140737488346872
+rdi            0x4                 4
+rbp            0x7fffffffde00      0x7fffffffde00
+rsp            0x7fffffffddd0      0x7fffffffddd0
+r8             0x0                 0
+r9             0x7ffff7fe2180      140737354015104
+r10            0x3                 3
+r11            0x2                 2
+r12            0x555555555080      93824992235648
+r13            0x0                 0
+r14            0x0                 0
+r15            0x0                 0
++rip            0x5555555551d6      0x5555555551d6 <main+16> ----------> We would change the value of rip to 0x555555555165 <FunctionShouldNotExecute>
+eflags         0x202               [ IF ]
+cs             0x33                51
+ss             0x2b                43
+ds             0x0                 0
+es             0x0                 0
+fs             0x0                 0
+gs             0x0                 0
+(gdb) set $rip = 0x555555555165
+(gdb) c
+Continuing.
+
+
+I should not execute!!!
+
+
+Program received signal SIGSEGV, Segmentation fault.
+0x00007fffffffdef8 in ?? ()
+```
+### We received a segmentation fault:
+```
+void FunctionShouldNotExecute(void)
+{
+        printf("\n\nI should not execute!!!\n\n");
+}
+```
+#### We actually, just changed the register value arbitarily, that part does not contain any value to return (there is actually no logical flow to this portion of the program). Hence whatever will be present on the stack would pretty much be garbage.
+### To solve this: just add an exit(0):
+```
+void FunctionShouldNotExecute(void)
+{
+        printf("\n\nI should not execute!!!\n\n");
+        exit(0);
+}
+```
+```diff
+- For my case, it didn't happen
+```
+```diff
+(gdb) set $rip = 0x1175
+(gdb) c
+Continuing.
+
+-Program received signal SIGSEGV, Segmentation fault.
+0x0000000000001175 in ?? ()
+
+```
+see: https://youtu.be/bFD2uHsO098?t=998
 
  
