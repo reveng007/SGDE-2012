@@ -4,7 +4,7 @@
  -----------------------------------------------
  -----------------------------------------------
 
-All this notes are taken from here: https://www.youtube.com/playlist?list=PLfpQOoR6-z-rQpwDygoZuHSNCCZBHomlF
+All this notes are taken from here: [SGDE 2012](https://www.youtube.com/playlist?list=PLfpQOoR6-z-rQpwDygoZuHSNCCZBHomlF)
 
 
 ### Without debug symbol:
