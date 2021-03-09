@@ -1611,7 +1611,7 @@ AAAA
 
 Breakpoint 2, main (argc=4, argv=0x7fffffffdef8) at main6.c:32
 32		printf("Sum of %s + %s is %d\n\n", argv[2], argv[3], sum );
-+(gdb) print sum                        -------------------------------> No we got the sum value as breakpoint was applied at printing statement not on the value assigning line.
++(gdb) print sum                        -------------------------------> Now we got the sum value as breakpoint was applied at printing statement not on the value assigning line.
 $1 = 110      
 
 ```
