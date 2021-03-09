@@ -1611,7 +1611,7 @@ AAAA
 
 Breakpoint 2, main (argc=4, argv=0x7fffffffdef8) at main6.c:32
 32		printf("Sum of %s + %s is %d\n\n", argv[2], argv[3], sum );
-+(gdb) print sum                        -------------------------------> Now we got the sum value as breakpoint was applied at printing statement not on the value assigning line.
++(gdb) print sum                        -------------------------------> No we got the sum value as breakpoint was applied at printing statement not on the value assigning line.
 $1 = 110      
 
 ```
@@ -1778,4 +1778,116 @@ Continuing.
 ```
 see: https://youtu.be/bFD2uHsO098?t=998
 
- 
+# Video 7: Convinience Variables and Calling Routines
+## Convinience Varibles:
+* We can create variables in GDB to hold data ----> just like in bash, IP=x.x.x.x OR in fish, set IP x.x.x.x
+* We can create **convinience varibles** with: set $i = 10
+* malloc usage: set $dyn = (char *)malloc(10)
+* demo ="reveng"
+* set argv[1] = $demo
+
+```diff
+$ gdb ./main7_debug
+
+                              x --- snip --- x
+
+Reading symbols from ./main7_debug...
+(gdb) run AAA 10 20
+Starting program: /home/kali/Desktop/ASM/Pentester-Academy/GNU_debugger/Video7/main7_debug AAA 10 20
+
+
+AAA
+
+Sum of 10 + 20 is 30
+
+[Inferior 1 (process 196235) exited normally]
+(gdb) break main
+Breakpoint 1 at 0x5555555551ed: file main7.c, line 27.
+(gdb) run AAA 10 30
+Starting program: /home/kali/Desktop/ASM/Pentester-Academy/GNU_debugger/Video7/main7_debug AAA 10 30
+
+Breakpoint 1, main (argc=4, argv=0x7fffffffdef8) at main7.c:27
+27		int sum = 0;
+(gdb) print argv[1]
+$1 = 0x7fffffffe271 "AAA"
++(gdb) set $demo = "BBBB"
+(gdb) print $demo
+$2 = "BBBB"
++(gdb) set argv[1] = $demo
+(gdb) print argv[1]
++$3 = 0x7ffff7faef70 "BBBB"
+(gdb) c
+Continuing.
+
+
+BBBB
+
+Sum of 10 + 30 is 40
+
+[Inferior 1 (process 196241) exited normally]
+```
+Using **malloc** as convinience variable:
+```diff
+[Inferior 1 (process 196241) exited normally]
+(gdb) c
+The program is not being run.
+(gdb) run AAA 10 20
+Starting program: /home/kali/Desktop/ASM/Pentester-Academy/GNU_debugger/Video7/main7_debug AAA 10 20
+
+Breakpoint 1, main (argc=4, argv=0x7fffffffdef8) at main7.c:27
+27		int sum = 0;
++(gdb) set $dyn = (char *)malloc(10)
+(gdb) print $dyn
++$4 = 0x7ffff7faef70 ""
++(gdb) x/10xb $dyn
++0x7ffff7faef70:	0x00	0x00	0x00	0x00	0x00	0x00	0x00	0x00  ----> 10 
++0x7ffff7faef78:	0x00	0x00                                      ----> locations 
++(gdb) set argv[1] = $dyn
+(gdb) print argv[1]
++$5 = 0x7ffff7faef70 ""
+```
+We can also apply other function call in the operations
+```diff
+$(gdb) info breakpoints 
+Num     Type           Disp Enb Address            What
+2       breakpoint     keep y   0x00005555555551ed in main at main7.c:27
+	breakpoint already hit 1 time
+(gdb) run AAA 10 30
+Starting program: /home/kali/Desktop/ASM/Pentester-Academy/GNU_debugger/Video7/main7_debug AAA 10 30
+
+Breakpoint 2, main (argc=4, argv=0x7fffffffdef8) at main7.c:27
+27		int sum = 0;
++(gdb) set $dyn = (char *)malloc(10)
+(gdb) print $dyn
+$8 = 0x7ffff7faef70 ""
+(gdb) x/10xb $dyn
+0x7ffff7faef70:	0x00	0x00	0x00	0x00	0x00	0x00	0x00	0x00
+0x7ffff7faef78:	0x00	0x00
++(gdb) call strcpy($dyn, argv[1])
+-'at 0x0x7ffff7f48ff0' has unknown return type; cast the call to its declared return type
+
+```
+It didn't gave me satisfactory result...
+see: [here](https://youtu.be/Kh1kM1m1kkk?t=373)
+```
+(gdb) call AddNumbers(10,20)
+$9 = 30
+(gdb) set $i = 100
+(gdb) set $j = 200
+(gdb) call AddNumbers($i, $j)
+$10 = 300
+(gdb) call EchoInput("Holla!")
+
+
+Holla!
+
+(gdb) call EchoInput("argv[1]")
+
+
+argv[1]
+
+(gdb) call EchoInput(argv[1])
+
+
+AAA
+``` 
