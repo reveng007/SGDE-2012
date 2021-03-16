@@ -1,3 +1,5 @@
+### Viewers follow this link: [SGDE 2012](https://www.youtube.com/playlist?list=PLfpQOoR6-z-rQpwDygoZuHSNCCZBHomlF)
+
 # Video 1.
 
  Debug Symbols is used to provide specification:
