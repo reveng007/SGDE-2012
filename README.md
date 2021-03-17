@@ -1892,4 +1892,411 @@ argv[1]
 
 
 AAA
-``` 
+```
+# Video 8: Cracking a Simple Binary with DEBUG Symbols
+
+### Strings
+
+1. Display strings in the program
+2. Poorly coded ones may reveal private/secret information
+3. Secret can be easily hidden by encryption/encoding
+4. Not very powerful but is a good starting point
+
+### Note: 
+Larger the program, more is the complexity of cracking and more presence of strings
+
+#### I created 4 files:
+1. with debug symbols (with -ggdb)
+2. binary with ripped symbols
+3. binary with stripped symbols
+4. binary with full stripped symbols
+----------------
+
+#### A) Cracking with "strings" utility    : Static Analysis
+
+1.
+```diff
+$ strings Video8_debug
+
+/lib64/ld-linux-x86-64.so.2
+exit
+puts
+printf
+__cxa_finalize
+strcmp
+__libc_start_main
+libc.so.6
+GLIBC_2.2.5
+_ITM_deregisterTMCloneTable
+__gmon_start__
+_ITM_registerTMCloneTable
+u/UH
+[]A\A]A^A_
++Secret code: 4832-3422-3421-9847
++%s password_to_unlock           --> seems like string passed to printf
++l33tsp3ak
++Incorrect Password! Please try again! 
+;*3$"
+GCC: (Debian 10.2.1-6) 10.2.1 20210110
+Video8.c
+long long int
++password
+/home/kali/Desktop/ASM/Pentester-Academy/GNU_debugger/Video8
+main
++UnlockSecret
+long long unsigned int
+short unsigned int
+GNU C17 10.2.1 20210110 -mtune=generic -march=x86-64 -ggdb -fasynchronous-unwind-tables
+unsigned char
+result
+argv
+argc
+Video8.c
+userInput
+checkPass
+short int
++IsPasswordCorrect
+                     x --- snip --- x
+```
+### All the juicy infos are marked with green
+### Now,
+```
+$ ./Video8_debug l33tsp3ak
+Secret code: 4832-3422-3421-9847
+```
+
+2.
+```
+$ strings Video8_debug_ripped
+
+GCC: (Debian 10.2.1-6) 10.2.1 20210110
+Video8.c
+long long int
+password
+/home/kali/Desktop/ASM/Pentester-Academy/GNU_debugger/Video8
+main
+UnlockSecret
+long long unsigned int
+short unsigned int
+GNU C17 10.2.1 20210110 -mtune=generic -march=x86-64 -ggdb -fasynchronous-unwind-tables
+unsigned char
+result
+argv
+argc
+Video8.c
+userInput
+checkPass
+short int
+IsPasswordCorrect
+                    x --- snip --- x
+```
+## NOTICE:
+Here, we cannot see **secret code** and **password to unlock** strings
+
+### Now,
+```
+$ ./Video8_debug_ripped l33tsp3ak
+
+Failed to execute process './Video8_debug_ripped'. Reason:
+exec: Exec format error
+The file './Video8_debug_ripped' is marked as an executable but could not be run by the operating system.
+```
+
+3.
+```diff
+$ strings Video8_debug_stripped
+
+/lib64/ld-linux-x86-64.so.2
+exit
+puts
+printf
+__cxa_finalize
+strcmp
+__libc_start_main
+libc.so.6
+GLIBC_2.2.5
+_ITM_deregisterTMCloneTable
+__gmon_start__
+_ITM_registerTMCloneTable
+u/UH
+[]A\A]A^A_
++Secret code: 4832-3422-3421-9847
++%s password_to_unlock            --> seems like string passed to printf
++l33tsp3ak
++Incorrect Password! Please try again! 
+;*3$"
+GCC: (Debian 10.2.1-6) 10.2.1 20210110
+deregister_tm_clones
+__do_global_dtors_aux
+completed.0
+__do_global_dtors_aux_fini_array_entry
+frame_dummy
+__frame_dummy_init_array_entry
+__FRAME_END__
+__init_array_end
+_DYNAMIC
+__init_array_start
+__GNU_EH_FRAME_HDR
+_GLOBAL_OFFSET_TABLE_
+__libc_csu_fini
+_ITM_deregisterTMCloneTable
+puts@GLIBC_2.2.5
+_edata
+printf@GLIBC_2.2.5
+__libc_start_main@GLIBC_2.2.5
+__data_start
+strcmp@GLIBC_2.2.5
+__gmon_start__
+__dso_handle
+_IO_stdin_used
+__libc_csu_init
++IsPasswordCorrect
+__bss_start
++main
++UnlockSecret
+                          x --- snip --- x
+```
+Here we can see all the strings.
+
+### Now,
+```
+$ ./Video8_debug_stripped l33tsp3ak
+
+Secret code: 4832-3422-3421-9847
+```
+4.
+```diff
+$ strings Video8_debug_full-stripped 
+
+/lib64/ld-linux-x86-64.so.2
+exit
+puts
+printf
+__cxa_finalize
+strcmp
+__libc_start_main
+libc.so.6
+GLIBC_2.2.5
+_ITM_deregisterTMCloneTable
+__gmon_start__
+_ITM_registerTMCloneTable
+u/UH
+[]A\A]A^A_
++Secret code: 4832-3422-3421-9847
++%s password_to_unlock            --> seems like string passed to printf
++l33tsp3ak
++Incorrect Password! Please try again! 
+;*3$"
+```
+We can see important strings are present
+
+### Now,
+```
+$ ./Video8_debug_full-stripped l33tsp3ak
+
+Secret code: 4832-3422-3421-9847
+```
+B) Now, with gdb  : run-time analysis/dynamic analysis
+
+1.
+```diff
+Reading symbols from ./Video8_debug...
+
+(gdb) info functions
+
+All defined functions:
+
+File Video8.c:
+10:	int IsPasswordCorrect(char *, char *);
+5:	void UnlockSecret(void);
+25:	int main(int, char **);
+
+                        x --- snip --- x
+
++(gdb) break main        --> As in C, from main function program execution starts
+Breakpoint 1 at 0x11c1: file Video8.c, line 28.
+
++(gdb) run somevalue      ---> Lets run the program 
+
+Starting program: /home/kali/Desktop/ASM/Pentester-Academy/GNU_debugger/Video8/Video8_debug somevalue
+
+Breakpoint 1, main (argc=2, argv=0x7fffffffdf28) at Video8.c:28
+28		int checkPass = 0;
+
++ Now, 2 functions are left, one has void input and another one has 2 input, which we don't know. So lets 1st call UnlockSecret() as no value is required to call this.
+
++(gdb) call UnlockSecret()
+
+Secret code: 4832-3422-3421-9847   -----> we got the secret code
+```
+### But we still haven't got the passphrase
+
+```diff
+Here what we know is main() and UnlockSecret() don't contain any passphrase, if that would have been true, we would see that earlier.
+
+So, now we have to concentrate on IsPasswordCorrect()
+
+(gdb) info breakpoints
+
+Num     Type           Disp Enb Address            What
+1       breakpoint     keep y   0x00005555555551c1 in main at Video8.c:28
+	breakpoint already hit 1 time
+
++(gdb) break IsPasswordCorrect
+Breakpoint 3 at 0x555555555188: file Video8.c, line 14.
+
++(gdb) run any_value
+The program being debugged has been started already.
+Start it from the beginning? (y or n) y
+Starting program: /home/kali/Desktop/ASM/Pentester-Academy/GNU_debugger/Video8/Video8_debug asdfa
+
++Breakpoint 3, IsPasswordCorrect (password=0x7fffffffe293 "any_value", 
++    userInput=0x555555556040 "l33tsp3ak") at Video8.c:14 
+14		result = strcmp(password, userInput);
+
++(gdb) print password
+$2 = 0x7fffffffe293 "any_value"
+
++(gdb) print userInput
+$3 = 0x555555556040 "l33tsp3ak"
+```
+Here we got the password: **"l33tsp3ak"** but it should be equal to password not userInput. Developer did a slight naming error.
+
+password = 0x555555556040 "l33tsp3ak"
+userInput = 0x7fffffffe293 "any_value"
+
+### We can also do the same as done above like:
+```diff
++(gdb) info scope IsPasswordCorrect
+Scope for IsPasswordCorrect:
++Symbol password is a complex DWARF expression: ----> password
+     0: DW_OP_fbreg -40
+, length 8.
++Symbol userInput is a complex DWARF expression: ----> userInput
+     0: DW_OP_fbreg -48
+, length 8.
++Symbol result is a complex DWARF expression:   -----> result
+     0: DW_OP_fbreg -20
+, length 4.
+
++(gdb) print password
+$2 = 0x7fffffffe293 "any_value"
+
++(gdb) print userInput
+$3 = 0x555555556040 "l33tsp3ak"
+
+```
+2.
+```diff
+
+Reading symbols from ./Video8_debug_ripped...
+(gdb) info functions 
+All defined functions:
+
+File Video8.c:
+10:	int IsPasswordCorrect(char *, char *);
+5:	void UnlockSecret(void);
+25:	int main(int, char **);
+
+                        x --- snip --- x
+(gdb) break main
+Breakpoint 1 at 0x11b2: file Video8.c, line 26.
+
+(gdb) run any_value
+Starting program: /home/kali/Desktop/ASM/Pentester-Academy/GNU_debugger/Video8/Video8_debug_ripped any_value
+/usr/bin/bash: line 1: /home/kali/Desktop/ASM/Pentester-Academy/GNU_debugger/Video8/Video8_debug_ripped: cannot execute binary file: Exec format error
+/usr/bin/bash: line 1: /home/kali/Desktop/ASM/Pentester-Academy/GNU_debugger/Video8/Video8_debug_ripped: Success
+During startup program exited with code 126.
+
++ We got the PDB symbols, but then also unable to reverse it ??
+
+```
+
+3.
+```diff
+Reading symbols from ./Video8_debug_stripped...
+(No debugging symbols found in ./Video8_debug_stripped)
+
+(gdb) info functions 
+All defined functions:
+
+Non-debugging symbols:
+0x0000555555555000  _init
+0x0000555555555030  puts@plt
+0x0000555555555040  printf@plt
+0x0000555555555050  strcmp@plt
+0x0000555555555060  exit@plt
+0x0000555555555070  __cxa_finalize@plt
+0x0000555555555080  _start
+0x00005555555550b0  deregister_tm_clones
+0x00005555555550e0  register_tm_clones
+0x0000555555555120  __do_global_dtors_aux
+0x0000555555555160  frame_dummy
+0x0000555555555165  UnlockSecret
+0x0000555555555178  IsPasswordCorrect
+0x00005555555551b2  main
+
+                    x --- snip --- x
+
++ Functions can not be seen(strings/PDB symbols), reversing can't be done with ease
+
+(gdb) break main 
+Breakpoint 1 at 0x11b6
+
+(gdb) info breakpoints 
+Num     Type           Disp Enb Address            What
+1       breakpoint     keep y   0x00000000000011b6 <main+4>
+
+(gdb) run anything
+Starting program: /home/kali/Desktop/ASM/Pentester-Academy/GNU_debugger/Video8/Video8_debug_stripped anything
+
+Breakpoint 1, 0x00005555555551b6 in main ()
+(gdb) c
+Continuing.
+
+
+Incorrect Password! Please try again! 
+
+
+[Inferior 1 (process 149559) exited normally]
+
+```
+
+4.
+```diff
+Reading symbols from ./Video8_debug_full-stripped...
+(No debugging symbols found in ./Video8_debug_full-stripped)
+
+(gdb) info functions 
+All defined functions:
+
+
++ Functions can not be seen(strings/PDB symbols), reversing can't be done with ease
+
+```
+## Strangly enough,
+**When I used string utility(statis analysis) with these files, I got strings/PDB symbols on 3/4 (except ripped file, strangely - fully stripped file should be in the excluded portion according to the comparison that I made earlier, among ripped and stripped files and debug files).**
+
+**But anyways, When I used gdb with all those files(dynamic/runtime analysis), I got strings from 1/4 - the one file from which I got the PDB symbols, is the file with debug symbols(Video8_debug)**
+
+But how is that possible??
+
+#### In practical sceanarios, we will get debug symbols with binary very often but sometimes not. But for the sake of the open source community, we have the source code to compare them with the binary
+
+## Video 9: Disassembling and Cracking a Simple Binary
+
+Mainly ASM syntax has **AT&T** ans **Intel** syntax
+
+### Procedure to do that:
+
+```
+1. set disassembly-flavor  <tab><tab> 
+
+   set disassembly-flavor <syntax name>
+
+2. disassembly <ADDRESS>
+```
+**By default, gdb uses AT&T format which is also available for diassemblying code/software with GAS(GNU Assembler)**
+
+see the video: [link](https://www.youtube.com/watch?v=bbVLw6I15f0)
+
