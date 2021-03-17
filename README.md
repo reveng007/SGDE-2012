@@ -2300,3 +2300,20 @@ Mainly ASM syntax has **AT&T** ans **Intel** syntax
 
 see the video: [link](https://www.youtube.com/watch?v=bbVLw6I15f0)
 
+## Video 10: Conditional Breakpoints using Variables and Registers
+
+Sometimes, regular breakpoints don't work:
+
+1. Break only if condition is met
+2. Handy in cases where there are loops
+3. Conditions can be simple/complex
+
+see the video : [youtube](https://www.youtube.com/watch?v=gIWlGxmVzT0&list=PLfpQOoR6-z-rQpwDygoZuHSNCCZBHomlF&index=10)
+see this : [link](https://stackoverflow.com/questions/13064809/the-point-of-test-eax-eax)
+
+### GDB disables ASLR while debugging: [link](https://www.youtube.com/watch?v=pphfcaGnWSA)
+
+## Video14: GDB on 64 Bit Systems
+
+see: [link](https://www.youtube.com/watch?v=M9p5bcmd7PA&t=433s)
+ 
