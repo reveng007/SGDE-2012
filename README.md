@@ -1895,6 +1895,14 @@ AAA
 ```
 # Video 8: Cracking a Simple Binary with DEBUG Symbols
 
+### NOTE:
+To simply move instruction pointer(rip/eip) to next step,
+
+Use:
+```
+(gdb) stepi
+```
+
 ### Strings
 
 1. Display strings in the program
