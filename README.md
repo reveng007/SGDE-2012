@@ -1205,10 +1205,25 @@ Num     Type           Disp Enb Address            What
 +Examine memory: x/FMT ADDRESS.   -------------------------------> usage format
 ADDRESS is an expression for the memory address to examine.
 FMT is a repeat count followed by a format letter and a size letter.
-Format letters are o(octal), x(hex), d(decimal), u(unsigned decimal),
-  t(binary), f(float), a(address), i(instruction), c(char), s(string)
-  and z(hex, zero padded on the left).
-Size letters are b(byte), h(halfword), w(word), g(giant, 8 bytes).
+Format letters are 
+o(octal), 
+x(hex), 
+d(decimal), 
+u(unsigned decimal),
+t(binary), 
+f(float), 
+a(address), 
+i(instruction), 
+c(char), 
+s(string)
+and z(hex, zero padded on the left).
+
+Size letters are 
+b(byte), 
+h(halfword), 
+w(word), 
+g(giant, 8 bytes).
+
 The specified number of objects of the specified size are printed
 according to the format.  If a negative number is specified, memory is
 examined backward from the address.
@@ -1233,6 +1248,9 @@ with this command or "print".
 +(gdb) x/a argv[1]
 0x7fffffffe273:	0x5300676e65766552
 ```
+see:[examine in gdb by MIT](https://web.mit.edu/gnu/doc/html/gdb_10.html)
+see:[output formats in gdb by MIT](https://web.mit.edu/gnu/doc/html/gdb_10.html#SEC57)
+
 ### To diassemble a function:
 ```diff
 +(gdb) disassemble main
