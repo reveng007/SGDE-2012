@@ -1248,8 +1248,8 @@ with this command or "print".
 +(gdb) x/a argv[1]
 0x7fffffffe273:	0x5300676e65766552
 ```
-see:[examine in gdb by MIT](https://web.mit.edu/gnu/doc/html/gdb_10.html)
-see:[output formats in gdb by MIT](https://web.mit.edu/gnu/doc/html/gdb_10.html#SEC57)
+see: [examine-in-gdb-by-MIT](https://web.mit.edu/gnu/doc/html/gdb_10.html)
+see: [output-formats-in-gdb-by-MIT](https://web.mit.edu/gnu/doc/html/gdb_10.html#SEC57)
 
 ### To diassemble a function:
 ```diff
