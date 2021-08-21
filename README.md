@@ -1,5 +1,10 @@
 ### Viewers can follow this link: [SGDE 2012](https://www.youtube.com/playlist?list=PLfpQOoR6-z-rQpwDygoZuHSNCCZBHomlF)
 
+NOTE:
+-----
+`print` will give you the address.
+`x/x{b/g/h/w}` will give you the value stored at that address.
+
 # Video 1.
 
  Debug Symbols is used to provide specification:
