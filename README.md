@@ -902,6 +902,7 @@ $ strace -p [PID]
 ```
 
 ### See this:
+
 ![](https://github.com/reveng007/SGDE-2012/blob/main/GNU_debugger/Video4/strace_pid.png?raw=true)
 
 ### Showing statistical data:
