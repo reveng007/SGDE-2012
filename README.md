@@ -781,6 +781,8 @@ $ nm ./main3_debug | grep 'D'
 ```
 # Video 4 - Systemcall Tracing with strace
 
+strace vs. ltrace vs. ptrace vs. ftrace: [gist.github.com/reveng007](https://gist.github.com/reveng007/3e1d7a692649d30a75e566684207880c)
+
 - Helper tool to understand how program interact with the OS
 - Traces all System calls made by the program
 - Tells us about arguments passed and has great filtering capabilities
